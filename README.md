@@ -40,6 +40,7 @@ docker run -d --name qwen38-27b --gpus all --ipc=host -p 8219:8000 \
   --attention-backend triton_attn \
   --kv-cache-dtype fp8 \
   --reasoning-parser qwen3 \
+  --enable-auto-tool-choice --tool-call-parser qwen3_coder \
   --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
   --gpu-memory-utilization 0.80 \
   --max-model-len 262144 \
@@ -63,6 +64,10 @@ Swap the volume + `--served-model-name` for FP8/bf16; drop `--quantization` and
   Only 16 of 64 layers are full attention (rest are Gated DeltaNet with constant-size
   state), so KV is cheap here to begin with — 131K ctx at util 0.60 already fits 247K
   KV tokens.
+- **`--enable-auto-tool-choice --tool-call-parser qwen3_coder`** — without these the server
+  never emits structured `tool_calls`, and every agentic client (and benchmark) silently
+  degrades. Our own benchmark preflight caught this omission on the first run — that's
+  why the verify step below exists.
 - **`--speculative-config mtp`** — the checkpoint ships its own MTP head (`mtp.*`
   tensors); no draft model needed. See K-tuning below.
 - **`--gpu-memory-utilization 0.80`** — unified memory: the GPU pool *is* system RAM.

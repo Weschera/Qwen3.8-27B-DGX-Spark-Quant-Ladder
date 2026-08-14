@@ -10,6 +10,7 @@ docker run -d --name qwen38-27b --gpus all --ipc=host -p 8219:8000 \
   --attention-backend triton_attn \
   --kv-cache-dtype fp8 \
   --reasoning-parser qwen3 \
+  --enable-auto-tool-choice --tool-call-parser qwen3_coder \
   --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
   --gpu-memory-utilization 0.80 \
   --max-model-len 262144 \
