@@ -76,6 +76,14 @@ Swap the volume + `--served-model-name` for FP8/bf16; drop `--quantization` and
   unsure.
 - **`--max-num-seqs 4`** — single-user box; admit a few streams, keep batch-1 latency.
 
+### Flags that did nothing (so you don't have to test them)
+
+`--enable-flashinfer-autotune` + `FLASHINFER_CUDA_ARCH_LIST=12.1a` (seen in other GB10
+recipes): measured zero effect on `vllm/vllm-openai:nightly` ≥ mid-Aug 2026 — the nightly
+already picks correct sm_121 kernels. Also mind your accounting when comparing decode
+claims: TTFT-inclusive vs decode-only differs by ~3-5% on short runs, and code vs prose
+differs by ~60% under MTP (acceptance-bound). State your basis.
+
 ## MTP tuning (measured acceptance)
 
 Per-position draft acceptance we observed at K3 during a long code generation:
