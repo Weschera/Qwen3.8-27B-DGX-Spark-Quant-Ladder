@@ -84,6 +84,36 @@ already picks correct sm_121 kernels. Also mind your accounting when comparing d
 claims: TTFT-inclusive vs decode-only differs by ~3-5% on short runs, and code vs prose
 differs by ~60% under MTP (acceptance-bound). State your basis.
 
+## Atlas lane: the 30 tok/s protocol (verified 2×, 2026-08-15)
+
+With the LUT-staging repair kernels (Atlas PR #519 lineage), a single GB10 Spark serves
+this model **above 30 tok/s** server-side decode. Full build + deploy walkthrough:
+[Atlas-DGX-Spark-Quickstart](https://github.com/Weschera/Atlas-DGX-Spark-Quickstart).
+
+Measured (server's `usage."response_token/s"`, MinHeap code prompt, temp 0, 3 repeats,
+two independent labs): effort-none **32.0 / 29.8 / 30.5** (ours) · 31.6 (maintainer
+fingerprint, incl. one deterministic-twin 964-token run) · thinking default 24.1.
+Matched protocol on vLLM: 28.2 / 23.1 — Atlas holds the single-stream decode crown;
+vLLM keeps prefill (~2,000 vs ~530 tok/s), concurrency, and the 262K–1M window.
+
+What costs tok/s vs the fast protocol: temp 0.6 (−~2), prose vs code (−~4 via MTP
+acceptance), bf16-KV override (−~2), pre-#519 kernels (−~5). State temp + prompt class
+next to any number you quote.
+
+## Apple Silicon + the MTP sidecar: ~45 tok/s on an M4 Max
+
+`mlx-community/Qwen3.8-27B-MTP-4bit` packages the checkpoint's MTP head as a 239 MB
+draft model. With `mlx-vlm` (plain `mlx-lm` cannot load `qwen3_5_mtp`):
+
+```bash
+mlx_vlm.generate --model mlx-community/Qwen3.8-27B-4bit \
+  --draft-model mlx-community/Qwen3.8-27B-MTP-4bit --draft-kind mtp --draft-block-size 3 ...
+```
+
+Measured on M4 Max 128 GB: **~45 tok/s** generation (55% draft acceptance, prose,
+temp 0.7) vs 29.5 plain MLX — currently the fastest single-box decode we have measured
+for this model on any hardware. (Single-session measurement; repeats pending.)
+
 ## MTP tuning (measured acceptance)
 
 Per-position draft acceptance we observed at K3 during a long code generation:
